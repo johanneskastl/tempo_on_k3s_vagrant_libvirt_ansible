@@ -8,3 +8,6 @@
 
 - name: 'Run playbook-minio_operator.yml'
   ansible.builtin.import_playbook: playbook-minio_operator.yml
+
+- name: 'Run playbook-minio_tenant.yml'
+  ansible.builtin.import_playbook: playbook-minio_tenant.yml
