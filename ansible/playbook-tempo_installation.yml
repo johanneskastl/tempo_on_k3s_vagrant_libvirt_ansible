@@ -1,0 +1,50 @@
+---
+
+- name: 'Install Grafana Tempo'
+  hosts: 'k3s1'
+  gather_facts: true
+  become: false
+  module_defaults:
+    kubernetes.core.helm:
+      kubeconfig: './k3s-kubeconfig'
+    kubernetes.core.k8s:
+      kubeconfig: './k3s-kubeconfig'
+    kubernetes.core.k8s_info:
+      kubeconfig: './k3s-kubeconfig'
+
+  tasks:
+
+    - name: 'Install Grafana Tempo via the helm chart'
+      delegate_to: 'localhost'
+      kubernetes.core.helm:
+        chart_repo_url: 'https://grafana.github.io/helm-charts'
+        release_name: 'tempo'
+        chart_ref: 'tempo'
+        release_namespace: 'grafana-tempo'
+        release_values:
+          # The distributor receives incoming trace span data for the system.
+          distributor:
+            receivers:
+              otlp:
+                protocols:
+                  http:
+                  grpc:
+          persistence:
+            enabled: true
+            size: 1Gi
+
+    - name: 'Wait until all pods are running'
+      delegate_to: 'localhost'
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: grafana-tempo
+      register: pod_list
+      until:
+        '
+        pod_list | json_query("resources[*].status.phase") | unique == ["Running"]
+        or
+        pod_list | json_query("resources[*].status.phase") | unique == ["Running", "Succeeded"]
+        '
+      retries: 12
+      delay: 10
