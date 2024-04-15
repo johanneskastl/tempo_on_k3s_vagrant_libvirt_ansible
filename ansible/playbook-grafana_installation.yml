@@ -1,0 +1,101 @@
+---
+
+- name: 'Install Grafana'
+  hosts: 'k3s1'
+  gather_facts: true
+  become: false
+  module_defaults:
+    kubernetes.core.helm:
+      kubeconfig: './k3s-kubeconfig'
+    kubernetes.core.k8s:
+      kubeconfig: './k3s-kubeconfig'
+    kubernetes.core.k8s_info:
+      kubeconfig: './k3s-kubeconfig'
+
+  tasks:
+
+    - name: 'Create the grafana namespace'
+      kubernetes.core.k8s:
+        name: 'grafana'
+        api_version: 'v1'
+        kind: 'Namespace'
+        state: 'present'
+      delegate_to: 'localhost'
+
+    - name: 'Install Grafana via the helm chart'
+      kubernetes.core.helm:
+        chart_repo_url: 'https://grafana.github.io/helm-charts'
+        release_name: 'grafana'
+        chart_ref: 'grafana'
+        release_namespace: 'grafana'
+        release_values:
+          persistence:
+            type: pvc
+            enabled: true
+            accessModes:
+              - ReadWriteOnce
+            size: 1Gi
+          ingress:
+            enabled: true
+            hosts:
+              - "grafana.{{ hostvars['k3s1']['ansible_default_ipv4']['address'] }}.sslip.io"
+          datasources:
+            datasources.yaml:
+              apiVersion: 1
+              datasources:
+                - name: tempo
+                  type: tempo
+                  access: proxy
+                  url: http://tempo.grafana-tempo.svc.cluster.local:3100
+                  jsonData:
+                    timeout: 60
+                    maxLines: 1000
+                    httpHeaderName1: 'X-Scope-OrgID'
+                  secureJsonData:
+                    httpHeaderValue1: '1'
+      delegate_to: 'localhost'
+
+    - name: 'Wait until all pods are running'
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: grafana
+      register: pod_list
+      until:
+        '
+        pod_list | json_query("resources[*].status.phase") | unique == ["Running"]
+        or
+        pod_list | json_query("resources[*].status.phase") | unique == ["Running", "Succeeded"]
+        '
+      retries: 12
+      delay: 10
+      delegate_to: 'localhost'
+
+    - name: 'Wait for the Grafana URL to be reachable'
+      ansible.builtin.uri:
+        url: "http://grafana.{{ hostvars['k3s1']['ansible_default_ipv4']['address'] }}.sslip.io"
+      register: result
+      until: "result.status == 302 or result.status == 200"
+      retries: 11
+      delay: 10
+
+    - name: 'Find out the Grafana initial admin password'
+      kubernetes.core.k8s_info:
+        kind: 'secret'
+        name: 'grafana'
+        namespace: 'grafana'
+        wait: true
+        wait_sleep: 10
+        wait_timeout: 120
+      register: k8s_info_grafana_initial_admin_secret
+      delegate_to: 'localhost'
+
+    - name: 'Output the inital grafana admin password'
+      ansible.builtin.debug:
+        msg: "The initial Grafana admin password is: {{ k8s_info_grafana_initial_admin_secret['resources'][0]['data']['admin-password'] | b64decode | replace('\n', '') }}"
+      delegate_to: 'localhost'
+
+    - name: 'Grafana URL'
+      ansible.builtin.debug:
+        msg: "Connect to the following URL in your browser: http://grafana.{{ hostvars['k3s1']['ansible_default_ipv4']['address'] }}.sslip.io"
+      delegate_to: 'localhost'
