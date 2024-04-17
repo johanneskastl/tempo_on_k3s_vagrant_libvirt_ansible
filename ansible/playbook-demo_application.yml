@@ -1,0 +1,73 @@
+---
+
+- name: 'Install the OpenTelemetry demo application'
+  hosts: 'k3s1'
+  gather_facts: true
+  become: false
+  module_defaults:
+    kubernetes.core.helm:
+      kubeconfig: './k3s-kubeconfig'
+    kubernetes.core.k8s:
+      kubeconfig: './k3s-kubeconfig'
+    kubernetes.core.k8s_info:
+      kubeconfig: './k3s-kubeconfig'
+
+  tasks:
+
+    - name: 'Install the OpenTelemetry demo application via the helm chart'
+      delegate_to: 'localhost'
+      kubernetes.core.helm:
+        chart_repo_url: 'https://open-telemetry.github.io/opentelemetry-helm-charts'
+        release_name: 'opentelemetry-demo'
+        chart_ref: 'opentelemetry-demo'
+        release_namespace: 'default'
+        release_values:
+          opentelemetry-collector:
+            enabled: true
+            config:
+              exporters:
+                otlp/grafana:
+                  endpoint: tempo.grafana-tempo:4317
+                  tls:
+                    insecure: true
+              service:
+                pipelines:
+                  traces:
+                    exporters:
+                      - debug
+                      - spanmetrics
+                      - otlp/grafana
+          jaeger:
+            enabled: false
+          grafana:
+            enabled: false
+          opensearch:
+            enabled: false
+          components:
+            frontendProxy:
+              ingress:
+                enabled: true
+                hosts:
+                  - host: "demo.{{ hostvars['k3s1']['ansible_default_ipv4']['address'] }}.sslip.io"
+                    paths:
+                      - path: /
+                        pathType: Prefix
+                        port: 8080
+
+    - name: 'Wait for the Demo URL to be reachable'
+      ansible.builtin.uri:
+        url: "http://demo.{{ hostvars['k3s1']['ansible_default_ipv4']['address'] }}.sslip.io"
+      register: result
+      until: "result.status == 302 or result.status == 200"
+      retries: 11
+      delay: 10
+
+    - name: 'Output Locust (Loadgenerator) URL'
+      delegate_to: 'localhost'
+      ansible.builtin.debug:
+        msg: "The Locust (Loadgenerator) is reachable at http://demo.{{ hostvars['k3s1']['ansible_default_ipv4']['address'] }}.sslip.io/loadgen/"
+
+    - name: 'Output Webshop URL'
+      delegate_to: 'localhost'
+      ansible.builtin.debug:
+        msg: "The Webshop is reachable at http://demo.{{ hostvars['k3s1']['ansible_default_ipv4']['address'] }}.sslip.io/"
