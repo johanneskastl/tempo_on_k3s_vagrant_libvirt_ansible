@@ -15,5 +15,8 @@
 - name: 'Run playbook-tempo_installation.yml'
   ansible.builtin.import_playbook: playbook-tempo_installation.yml
 
+- name: 'Run playbook-demo_application.yml'
+  ansible.builtin.import_playbook: playbook-demo_application.yml
+
 - name: 'Run playbook-grafana_installation.yml'
   ansible.builtin.import_playbook: playbook-grafana_installation.yml
