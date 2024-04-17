@@ -29,6 +29,11 @@ Vagrant.configure("2") do |config|
       trigger.run = {inline: "rm -vf ansible/k3s-kubeconfig"}
     end
 
+    node.trigger.after :destroy do |trigger|
+      trigger.warn = "Removing ansible/telemetrygen.sh"
+      trigger.run = {inline: "rm -vf ansible/telemetrygen.sh"}
+    end
+
   end # config.vm.define servers
 
 end # Vagrant.configure
