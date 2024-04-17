@@ -47,6 +47,15 @@
                   receivers:
                     - otlp
 
+    - name: 'Create telemetrygen script'
+      delegate_to: 'localhost'
+      ansible.builtin.copy:
+        dest: './telemetrygen.sh'
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          telemetrygen traces --otlp-endpoint opentelemetry-collector.{{ hostvars['k3s1']['ansible_default_ipv4']['address'] }}.sslip.io:80 --otlp-http --otlp-insecure --duration 5s
+
     - name: 'Output the URL'
       delegate_to: 'localhost'
       ansible.builtin.debug:
