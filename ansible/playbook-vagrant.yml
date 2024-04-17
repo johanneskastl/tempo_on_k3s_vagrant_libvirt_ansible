@@ -15,6 +15,9 @@
 - name: 'Run playbook-tempo_installation.yml'
   ansible.builtin.import_playbook: playbook-tempo_installation.yml
 
+- name: 'Run playbook-opentelemetrycollector_installation.yml'
+  ansible.builtin.import_playbook: playbook-opentelemetrycollector_installation.yml
+
 - name: 'Run playbook-demo_application.yml'
   ansible.builtin.import_playbook: playbook-demo_application.yml
 
