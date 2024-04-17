@@ -6,3 +6,6 @@ Vagrantfile.1
 
 # ignore kubeconfig fetched from the machine
 ansible/k3s-kubeconfig
+
+# ignore the telemetrygen script written by Ansible
+ansible/telemetrygen.sh
