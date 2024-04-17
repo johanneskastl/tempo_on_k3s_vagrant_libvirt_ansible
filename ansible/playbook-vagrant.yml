@@ -12,5 +12,8 @@
 - name: 'Run playbook-minio_tenant.yml'
   ansible.builtin.import_playbook: playbook-minio_tenant.yml
 
+- name: 'Run playbook-tempo_installation.yml'
+  ansible.builtin.import_playbook: playbook-tempo_installation.yml
+
 - name: 'Run playbook-grafana_installation.yml'
   ansible.builtin.import_playbook: playbook-grafana_installation.yml
