@@ -23,6 +23,16 @@ CLI tool, you can use the `OpenTelemetryCollector_without_demo` that does not
 contain the demo application. Instead it exposes the OpenTelemetryCollector
 using an ingress.
 
+## Installing a standalone OpenTelemetry Collector
+
+If you want to experiment with the demo application, but have more control over
+the OpenTelemetry Collector, you can use the
+`OpenTelemetryCollector_including_the_demo` branch. This contains the demo with
+the included OpenTelemetry Collector being disabled. Instead the OpenTelemetry
+Collector is being installed via its own helm chart and playbook. It is also
+exposed via an ingress, so you can use it via telemetrygen in addition to the
+demo application.
+
 ## Vagrant
 
 1. You need `vagrant`, obviously. And `git`. And Ansible...
