@@ -7,21 +7,22 @@ installed, together with Grafana (the graphical dashboard).
 The deployment uses the `tempo` helm chart, that installs Tempo in `monolithic
 (single binary) mode`.
 
-To generate traces, the [OpenTelemetry
-Demo](https://opentelemetry.io/docs/kubernetes/helm/demo/) is installed. It
-contains an instance of the OpenTelemetry Collector, that is configured to send
-the traces to Grafana Tempo.
 
 Default OS is openSUSE Leap 15.5, but that can be changed in the Vagrantfile.
 Please be aware, that this might break the Ansible provisioning.
 
 ## Sending traces using telemetrygen
 
-If you want to send traces to Loki using the
+In this branch the OpenTelemetry-Collector is exposed via an ingress, so you can
+use
 [telemetrygen](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/cmd/telemetrygen)
-CLI tool, you can use the `OpenTelemetryCollector_without_demo` that does not
-contain the demo application. Instead it exposes the OpenTelemetryCollector
-using an ingress.
+from outside the cluster to create traces like so:
+
+```bash
+telemetrygen traces \
+    --otlp-http --otlp-insecure --duration 5s \
+    --otlp-endpoint opentelemetry-collector.192.0.2.13.sslip.io:80
+```
 
 ## Installing a standalone OpenTelemetry Collector
 
