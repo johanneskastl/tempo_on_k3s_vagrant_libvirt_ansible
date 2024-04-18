@@ -24,6 +24,10 @@ telemetrygen traces \
     --otlp-endpoint opentelemetry-collector.192.0.2.13.sslip.io:80
 ```
 
+Conveniently, Ansible creates a script `ansible/telemetrygen.sh` that contains
+just this command with the correct IP address. So you can just run the script
+without remembering the details of the command...
+
 ## Installing a standalone OpenTelemetry Collector
 
 If you want to experiment with the demo application, but have more control over
