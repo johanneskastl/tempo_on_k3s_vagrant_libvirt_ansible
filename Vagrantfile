@@ -9,7 +9,7 @@ Vagrant.configure("2") do |config|
     # sizing of the VMs
     node.vm.provider "libvirt" do |lv|
       lv.random_hostname = true
-      lv.memory = 8192
+      lv.memory = 12288
       lv.cpus = 4
     end
 
