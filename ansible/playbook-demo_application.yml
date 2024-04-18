@@ -22,21 +22,24 @@
         chart_ref: 'opentelemetry-demo'
         release_namespace: 'default'
         release_values:
+          default:
+            # List of environment variables applied to all components
+            env:
+              - name: OTEL_EXPORTER_OTLP_ENDPOINT
+                value: 'http://opentelemetry-collector.grafana-tempo:4317'
+              - name: OTEL_SERVICE_NAME
+                valueFrom:
+                  fieldRef:
+                    apiVersion: v1
+                    fieldPath: "metadata.labels['app.kubernetes.io/component']"
+              - name: OTEL_COLLECTOR_NAME
+                value: 'opentelemetry-demo-otelcol'
+              - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+                value: cumulative
+              - name: OTEL_RESOURCE_ATTRIBUTES
+                value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo
           opentelemetry-collector:
-            enabled: true
-            config:
-              exporters:
-                otlp/grafana:
-                  endpoint: tempo.grafana-tempo:4317
-                  tls:
-                    insecure: true
-              service:
-                pipelines:
-                  traces:
-                    exporters:
-                      - debug
-                      - spanmetrics
-                      - otlp/grafana
+            enabled: false
           jaeger:
             enabled: false
           grafana:
